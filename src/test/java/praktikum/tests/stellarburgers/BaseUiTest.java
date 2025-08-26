@@ -37,9 +37,7 @@ public abstract class BaseUiTest {
         }
 
         driver.manage().window().maximize();
-        // без неявных ожиданий, чтобы избежать конфликтов с явными
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(0));
-        // зафиксируем окружение для Allure
         writeAllureEnv("Browser=" + browser);
 
         openMain();
@@ -49,7 +47,6 @@ public abstract class BaseUiTest {
     public void tearDown() {
         try {
             if (driver != null) {
-                // прикрепим финальный скрин (полезно при падениях)
                 try {
                     byte[] png = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
                     io.qameta.allure.Allure.addAttachment("Final screenshot", "image/png",
@@ -60,16 +57,13 @@ public abstract class BaseUiTest {
         } catch (Exception ignored) {}
     }
 
-    // -------------------- Drivers --------------------
-
-    private WebDriver createChromeDriver() {
+   private WebDriver createChromeDriver() {
         WebDriverManager.chromedriver().setup();
         ChromeOptions options = buildCommonChromeOptions();
         return new ChromeDriver(options);
     }
 
     private WebDriver createYandexDriver() {
-        // 1) Определяем бинарник Я.Браузера
         String yaBin = System.getProperty("yandex.binary");
         if (yaBin == null || yaBin.isBlank()) {
             String home = System.getProperty("user.home");
@@ -84,7 +78,7 @@ public abstract class BaseUiTest {
         ChromeOptions options = buildCommonChromeOptions();
         if (yaBin != null) options.setBinary(yaBin);
 
-        // 2) Подбираем совместимый chromedriver по major (по умолчанию 136)
+
         String yaMajor = System.getProperty("yandex.major", "136");
         WebDriverManager.chromedriver().browserVersion(yaMajor).setup();
 
@@ -94,7 +88,7 @@ public abstract class BaseUiTest {
     private ChromeOptions buildCommonChromeOptions() {
         ChromeOptions options = new ChromeOptions();
 
-        // стратегия загрузки страницы
+
         String pls = System.getProperty("pageLoadStrategy", "normal").toLowerCase().trim();
         switch (pls) {
             case "none":   options.setPageLoadStrategy(PageLoadStrategy.NONE); break;
@@ -102,7 +96,7 @@ public abstract class BaseUiTest {
             default:       options.setPageLoadStrategy(PageLoadStrategy.NORMAL);
         }
 
-        // headless при необходимости
+
         if (Boolean.parseBoolean(System.getProperty("headless", "false"))) {
             options.addArguments("--headless=new");
         }
@@ -115,7 +109,7 @@ public abstract class BaseUiTest {
         return options;
     }
 
-    // -------------------- Helpers --------------------
+
 
     @Step("Открываем главную страницу")
     protected void openMain() {

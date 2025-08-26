@@ -10,15 +10,6 @@ import org.junit.runners.model.FrameworkMethod;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Кастомный Suite, который запускает класс тестов последовательно
- * для каждого браузера из @Browsers({"chrome","yandex"}).
- *
- * Браузер прокидывается в тесты через System.setProperty("browser", <value>),
- * что читает твой BaseUiTest.setUp().
- *
- * В отчёте имена тестов будут с суффиксом: testName[chrome], testName[yandex].
- */
 public class BrowserSuite extends Suite {
 
     public BrowserSuite(Class<?> klass) throws InitializationError {
@@ -38,11 +29,6 @@ public class BrowserSuite extends Suite {
         return runners;
     }
 
-    /**
-     * Индивидуальный раннер, который:
-     * - перед запуском класса выставляет System.setProperty("browser", ...)
-     * - добавляет суффикс [browser] к имени класса/теста
-     */
     private static class ParamRunner extends BlockJUnit4ClassRunner {
         private final String browser;
 

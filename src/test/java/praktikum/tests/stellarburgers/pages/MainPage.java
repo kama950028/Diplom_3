@@ -7,13 +7,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
 
-/**
- * Стабильные переходы по вкладкам «Булки/Соусы/Начинки»:
- * - клики с ретраем (обычный -> JS)
- * - заголовки секций ищем без привязки к конкретному тегу (h2/span/p/div)
- * - после клика доскролливаем именно к заголовку секции
- * - ждём успех по двум критериям: активная вкладка ИЛИ заголовок в вьюпорте
- */
+
 public class MainPage {
     private final WebDriver driver;
     private final WebDriverWait wait;
