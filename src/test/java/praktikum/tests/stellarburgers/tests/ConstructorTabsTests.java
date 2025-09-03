@@ -1,5 +1,6 @@
 package praktikum.tests.stellarburgers.tests;
 
+import io.qameta.allure.junit4.DisplayName;
 import io.qameta.allure.Story;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,24 +13,36 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith(BrowserSuite.class)
 @Browsers({"chrome", "yandex"})
+@DisplayName("UI-тесты вкладок конструктора бургера")
 public class ConstructorTabsTests extends BaseUiTest {
 
     @Test
-    @Story("Конструктор: вкладки «Булки», «Соусы», «Начинки» переключаются корректно")
-    public void tabsSwitchingTest() {
+    @DisplayName("Переключение вкладок: Соусы")
+    @Story("Конструктор: вкладка «Соусы» становится активной")
+    public void saucesTabBecomesActiveTest() {
         openMain();
         MainPage main = new MainPage(driver);
-
         main.goSauces();
-        assertTrue("После клика по «Соусы» вкладка не активна и секция не видна",
-                main.tabActive("Соусы") || main.sectionInViewport("Соусы"));
+        assertTrue("Вкладка «Соусы» не активна", main.isTabCurrent("Соусы"));
+    }
 
+    @Test
+    @DisplayName("Переключение вкладок: Начинки")
+    @Story("Конструктор: вкладка «Начинки» становится активной")
+    public void fillingsTabBecomesActiveTest() {
+        openMain();
+        MainPage main = new MainPage(driver);
         main.goFillings();
-        assertTrue("После клика по «Начинки» вкладка не активна и секция не видна",
-                main.tabActive("Начинки") || main.sectionInViewport("Начинки"));
+        assertTrue("Вкладка «Начинки» не активна", main.isTabCurrent("Начинки"));
+    }
 
+    @Test
+    @DisplayName("Переключение вкладок: Булки")
+    @Story("Конструктор: вкладка «Булки» становится активной")
+    public void bunsTabBecomesActiveTest() {
+        openMain();
+        MainPage main = new MainPage(driver);
         main.goBuns();
-        assertTrue("После клика по «Булки» вкладка не активна и секция не видна",
-                main.tabActive("Булки") || main.sectionInViewport("Булки"));
+        assertTrue("Вкладка «Булки» не активна", main.isTabCurrent("Булки"));
     }
 }

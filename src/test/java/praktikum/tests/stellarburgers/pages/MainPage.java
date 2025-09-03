@@ -1,121 +1,117 @@
 package praktikum.tests.stellarburgers.pages;
 
+import io.qameta.allure.Allure;
 import io.qameta.allure.Step;
 import org.openqa.selenium.*;
-import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.io.ByteArrayInputStream;
 import java.time.Duration;
-
 
 public class MainPage {
     private final WebDriver driver;
     private final WebDriverWait wait;
 
-    private final By loginButtonMain = By.xpath("//button[normalize-space(text())='Войти в аккаунт']");
-    private final By profileLink     = By.xpath("//p[normalize-space(text())='Личный Кабинет']");
-
-    // вкладки допускают разные контейнеры (button/a/div) с вложенным span с текстом
-    private final By tabBunsBtn      = By.xpath("//*[self::button or self::a or self::div][.//span[normalize-space(text())='Булки']]");
-    private final By tabSaucesBtn    = By.xpath("//*[self::button or self::a or self::div][.//span[normalize-space(text())='Соусы']]");
-    private final By tabFillingsBtn  = By.xpath("//*[self::button or self::a or self::div][.//span[normalize-space(text())='Начинки']]");
-
     public MainPage(WebDriver driver) {
         this.driver = driver;
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(15)); // было 10, увеличили
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(8));
     }
 
-    // заголовок секции — без привязки к тегу
-    private By sectionHeader(String text) {
-        return By.xpath("//*[self::h1 or self::h2 or self::h3 or self::div or self::span or self::p][normalize-space(text())='" + text + "']");
+    private final By loginMainBtn = By.xpath("//button[normalize-space(text())='Войти в аккаунт']");
+    private final By profileBtn = By.xpath("//p[normalize-space(text())='Личный Кабинет']");
+
+    private By tabDiv(String name) {
+        return By.xpath("//div[contains(@class,'tab_tab')][.//span[normalize-space(text())='" + name + "']]");
     }
 
-    // активная вкладка: aria-selected/current на самом контейнере
-    private By activeTabBy(String text) {
-        return By.xpath(
-                "//*[self::button or self::a or self::div][.//span[normalize-space(text())='" + text + "']]"
-                        + "[@aria-selected='true' or contains(@class,'current')]"
-        );
+    private By sectionHeader(String name) {
+        return By.xpath("//h2[normalize-space(text())='" + name + "']");
     }
 
-    // ждём, что хотя бы одна секция появилась (контент подгрузился)
-    private void ensureIngredientsLoaded() {
-        wait.until(ExpectedConditions.or(
-                ExpectedConditions.presenceOfElementLocated(sectionHeader("Булки")),
-                ExpectedConditions.presenceOfElementLocated(sectionHeader("Соусы")),
-                ExpectedConditions.presenceOfElementLocated(sectionHeader("Начинки"))
-        ));
+    @Step("Клик по кнопке «Войти в аккаунт» на главной")
+    public void clickLoginMain() {
+        driver.findElement(loginMainBtn).click();
     }
 
-    private void jsScrollIntoView(WebElement el) {
-        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", el);
+    @Step("Клик по кнопке «Личный кабинет»")
+    public void clickProfile() {
+        driver.findElement(profileBtn).click();
     }
 
-    private void clickWithRetry(By by) {
+    @Step("Клик по вкладке «{name}»")
+    public void clickTab(String name) {
+        WebElement tab = driver.findElement(tabDiv(name));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center', inline:'nearest'});", tab);
+        sleep(120);
         try {
-            wait.until(ExpectedConditions.elementToBeClickable(by)).click();
-        } catch (Exception e) {
-            WebElement el = wait.until(ExpectedConditions.visibilityOfElementLocated(by));
-            jsScrollIntoView(el);
-            try { el.click(); } catch (Exception ex) {
-                ((JavascriptExecutor) driver).executeScript("arguments[0].click();", el);
+            tab.click();
+        } catch (ElementClickInterceptedException e) {
+            ((JavascriptExecutor) driver).executeScript("arguments[0].click();", tab);
+        } catch (WebDriverException e) {
+            try {
+                new Actions(driver).moveToElement(tab).pause(Duration.ofMillis(80)).click().perform();
+            } catch (Exception ignore) {
+                ((JavascriptExecutor) driver).executeScript("arguments[0].click();", tab);
             }
         }
     }
 
-    // после клика доскроллимся именно к заголовку секции и ждём «успех»
-    private void clickTabAndWait(By tabBtn, String text) {
-        ensureIngredientsLoaded();
-
-        // клик по вкладке
-        clickWithRetry(tabBtn);
-
-        // дождаться заголовок секции, доскроллить к нему (иногда активность меняется только после скролла)
-        WebElement header = wait.until(ExpectedConditions.visibilityOfElementLocated(sectionHeader(text)));
-        jsScrollIntoView(header);
-
-        // ждём одно из двух: вкладка активна ИЛИ заголовок в окне
-        wait.until(d -> tabActive(text) || sectionInViewport(header));
+    private void bringSectionToTop(String name) {
+        WebElement h = driver.findElement(sectionHeader(name));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'start', inline:'nearest'});", h);
+        ((JavascriptExecutor) driver).executeScript("window.scrollBy(0, -100);");
+        sleep(120);
     }
 
-    @Step("Нажимаем 'Войти в аккаунт' на главной")
-    public void clickLoginMain() {
-        clickWithRetry(loginButtonMain);
+    private ExpectedCondition<Boolean> tabHasCurrent(String name) {
+        return drv -> {
+            WebElement el = drv.findElement(tabDiv(name));
+            String cls = el.getAttribute("class");
+            return cls != null && cls.contains("tab_tab_type_current");
+        };
     }
 
-    @Step("Переходим в 'Личный кабинет'")
-    public void clickProfile() {
-        clickWithRetry(profileLink);
+    public void waitTabIsCurrent(String name) {
+        wait.until(tabHasCurrent(name));
     }
 
-    // --- вкладки
-    @Step("Вкладка «Булки»")
-    public void goBuns()     { clickTabAndWait(tabBunsBtn, "Булки"); }
-
-    @Step("Вкладка «Соусы»")
-    public void goSauces()   { clickTabAndWait(tabSaucesBtn, "Соусы"); }
-
-    @Step("Вкладка «Начинки»")
-    public void goFillings() { clickTabAndWait(tabFillingsBtn, "Начинки"); }
-
-    public boolean tabActive(String text) {
-        return !driver.findElements(activeTabBy(text)).isEmpty();
+    public boolean isTabCurrent(String name) {
+        String cls = driver.findElement(tabDiv(name)).getAttribute("class");
+        return cls != null && cls.contains("tab_tab_type_current");
     }
 
-    // перегрузка: при известном элементе заголовка
-    private boolean sectionInViewport(WebElement h) {
-        Number top = (Number)((JavascriptExecutor) driver)
-                .executeScript("return Math.round(arguments[0].getBoundingClientRect().top);", h);
-        Number innerH = (Number)((JavascriptExecutor) driver)
-                .executeScript("return window.innerHeight;");
-        long t = top.longValue();
-        long hgt = innerH.longValue();
-        return t >= 0 && t < hgt;
+    private void snap(String name) {
+        byte[] png = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
+        Allure.addAttachment(name, "image/png", new ByteArrayInputStream(png), ".png");
     }
 
-    // универсальный: по тексту секции
-    public boolean sectionInViewport(String text) {
-        WebElement h = wait.until(ExpectedConditions.visibilityOfElementLocated(sectionHeader(text)));
-        return sectionInViewport(h);
+    private void sleep(long ms) {
+        try { Thread.sleep(ms); } catch (InterruptedException ignored) {}
+    }
+
+    @Step("Переходим во вкладку «Соусы»")
+    public void goSauces() {
+        clickTab("Соусы");
+        bringSectionToTop("Соусы");
+        waitTabIsCurrent("Соусы");
+        snap("Tab active: Соусы");
+    }
+
+    @Step("Переходим во вкладку «Начинки»")
+    public void goFillings() {
+        clickTab("Начинки");
+        bringSectionToTop("Начинки");
+        waitTabIsCurrent("Начинки");
+        snap("Tab active: Начинки");
+    }
+
+    @Step("Переходим во вкладку «Булки»")
+    public void goBuns() {
+        clickTab("Булки");
+        bringSectionToTop("Булки");
+        waitTabIsCurrent("Булки");
+        snap("Tab active: Булки");
     }
 }
