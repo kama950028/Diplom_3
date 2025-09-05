@@ -73,6 +73,7 @@ public class MainPage {
         };
     }
 
+    @Step("Ждем, пока вкладка {name} станет активной")
     public void waitTabIsCurrent(String name) {
         wait.until(tabHasCurrent(name));
     }
@@ -82,6 +83,7 @@ public class MainPage {
         return cls != null && cls.contains("tab_tab_type_current");
     }
 
+    @Step("Проверяем, что вкладка {name} активна")
     private void snap(String name) {
         byte[] png = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
         Allure.addAttachment(name, "image/png", new ByteArrayInputStream(png), ".png");

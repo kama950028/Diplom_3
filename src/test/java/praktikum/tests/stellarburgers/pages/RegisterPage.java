@@ -34,6 +34,7 @@ public class RegisterPage {
         wait.until(ExpectedConditions.elementToBeClickable(registerButton)).click();
     }
 
+    @Step("Проверить отображение ошибки пароля")
     public boolean isPasswordErrorShown() {
         return !driver.findElements(errorText).isEmpty();
     }

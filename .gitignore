@@ -16,9 +16,10 @@ target/
 *.swp
 
 # Allure report: оставляем итоговый отчет, но игнорируем мусор
+!.allure-results/
 target/allure-results/
 target/site/
-!target/
-!target/site/
-!target/site/allure-maven-plugin/
+#!target/
+#!target/site/
+#!target/site/allure-maven-plugin/
 .allure/
